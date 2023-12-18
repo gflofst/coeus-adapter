@@ -321,43 +321,66 @@ void HermesEngine::DefineVariable(const VariableMetadata& variableMetadata) {
 #undef DEFINE_VARIABLE
 }
 
+//template<typename T>
+//void HermesEngine::DoGetDeferred_(
+//    const adios2::core::Variable<T> &variable, T *values) {
+//  auto blob = Hermes->bkt->Get(variable.m_Name);
+//    std::string name = variable.m_Name;
+//   #ifdef Meta_enabled
+//    // add spdlog method to extract the variable metadata
+//    metaInfo metaInfo(variable, adiosOpType::get);
+//    meta_logger_get->info("metadata: {}", metaInfoToString(metaInfo));
+//    globalData.insertGet(name);
+//    meta_logger_get->info("order: {}", globalData.GetMapToString());
+//   #endif
+//    //finish metadata extraction
+//  memcpy(values, blob.data(), blob.size());
+//}
+//
+//template<typename T>
+//void HermesEngine::DoPutDeferred_(
+//    const adios2::core::Variable<T> &variable, const T *values) {
+//  std::string name = variable.m_Name;
+//  Hermes->bkt->Put(name, variable.SelectionSize() * sizeof(T), values);
+//  // add spdlog method to extract the variable metadata
+//  #ifdef Meta_enabled
+//  metaInfo metaInfo(variable, adiosOpType::put);
+//  meta_logger_put->info("metadata: {}", metaInfoToString(metaInfo));
+//  globalData.insertPut(name);
+//  meta_logger_put->info("order: {}", globalData.PutMapToString());
+//  #endif
+//  VariableMetadata vm(variable.m_Name, variable.m_Shape, variable.m_Start,
+//                      variable.m_Count, variable.IsConstantDims(),
+//                      adios2::ToString(variable.m_Type));
+//  BlobInfo blobInfo(Hermes->bkt->name, name);
+//  DbOperation db_op(currentStep, rank, std::move(vm), name, std::move(blobInfo));
+//  client.Mdm_insertRoot(DomainId::GetGlobal(), db_op);
+//}
+
 template<typename T>
-void HermesEngine::DoGetDeferred_(
-    const adios2::core::Variable<T> &variable, T *values) {
-  auto blob = Hermes->bkt->Get(variable.m_Name);
+void HermesEngine::DoPutSync_(const adios2::core::Variable<T> &variable,
+                              const T *values){
     std::string name = variable.m_Name;
-   #ifdef Meta_enabled
-    // add spdlog method to extract the variable metadata
-    metaInfo metaInfo(variable, adiosOpType::get);
-    meta_logger_get->info("metadata: {}", metaInfoToString(metaInfo));
-    globalData.insertGet(name);
-    meta_logger_get->info("order: {}", globalData.GetMapToString());
-   #endif
-    //finish metadata extraction
-  memcpy(values, blob.data(), blob.size());
+    const char *filename = "/mnt/nvme/hua/output_"+rank+".txt";
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+    size_t dataSize = variable.SelectionSize() * sizeof(T);
+    size_t bytesWritten = write(fd, values, dataSize);
+    if (bytesWritten == -1) {
+        perror("write");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+    if (close(fd) == -1) {
+        perror("close");
+        exit(EXIT_FAILURE);
+    }
 }
 
-template<typename T>
-void HermesEngine::DoPutDeferred_(
-    const adios2::core::Variable<T> &variable, const T *values) {
-  std::string name = variable.m_Name;
-  Hermes->bkt->Put(name, variable.SelectionSize() * sizeof(T), values);
-  // add spdlog method to extract the variable metadata
-  #ifdef Meta_enabled
-  metaInfo metaInfo(variable, adiosOpType::put);
-  meta_logger_put->info("metadata: {}", metaInfoToString(metaInfo));
-  globalData.insertPut(name);
-  meta_logger_put->info("order: {}", globalData.PutMapToString());
-  #endif
-  VariableMetadata vm(variable.m_Name, variable.m_Shape, variable.m_Start,
-                      variable.m_Count, variable.IsConstantDims(),
-                      adios2::ToString(variable.m_Type));
-  BlobInfo blobInfo(Hermes->bkt->name, name);
-  DbOperation db_op(currentStep, rank, std::move(vm), name, std::move(blobInfo));
-  client.Mdm_insertRoot(DomainId::GetGlobal(), db_op);
-}
-
-}  // namespace coeus
+}// namespace coeus
 /**
  * This is how ADIOS figures out where to dynamically load the engine.
  * */

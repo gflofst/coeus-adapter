@@ -22,7 +22,7 @@ class DbOperation {
   int rank;
   VariableMetadata metadata;
   std::string name;
-  BlobInfo blobInfo;  // Assuming BlobInfo is a defined structure
+  BlobInfo blobInfo;
   std::string uid;
   int currentStep;
 
