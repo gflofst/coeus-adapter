@@ -29,7 +29,7 @@ HermesEngine::HermesEngine(adios2::core::IO &io,//NOLINT
     : adios2::plugin::PluginEngineInterface(io, name, mode, comm.Duplicate()) {
 //  if (comm.Rank() == 0) std::cout << "NAMING: " << name << " " << this->m_Name << " "
 //  << m_Name << " " << this->m_IO.m_Name << std::endl;
-  Hermes = std::make_shared<coeus::Hermes>();
+//  Hermes = std::make_shared<coeus::Hermes>();
 //  mpiComm = std::make_shared<coeus::MPI>(comm.Duplicate());
   Init_();
   engine_logger->info("rank {} with name {} and mode {}", rank, name, adios2::ToString(mode));
@@ -38,18 +38,18 @@ HermesEngine::HermesEngine(adios2::core::IO &io,//NOLINT
 /**
  * Test initializer
  * */
-HermesEngine::HermesEngine(std::shared_ptr<coeus::IHermes> h,
-                           std::shared_ptr<coeus::MPI> mpi,
-                           adios2::core::IO &io,
-                           const std::string &name,
-                           const adios2::Mode mode,
-                           adios2::helper::Comm comm)
-    : adios2::plugin::PluginEngineInterface(io, name, mode, comm.Duplicate()) {
-  Hermes = h;
-//  mpiComm = mpi;
-  Init_();
-  engine_logger->info("rank {} with name {} and mode {}", rank, name, adios2::ToString(mode));
-}
+//HermesEngine::HermesEngine(std::shared_ptr<coeus::IHermes> h,
+//                           std::shared_ptr<coeus::MPI> mpi,
+//                           adios2::core::IO &io,
+//                           const std::string &name,
+//                           const adios2::Mode mode,
+//                           adios2::helper::Comm comm)
+//    : adios2::plugin::PluginEngineInterface(io, name, mode, comm.Duplicate()) {
+//  Hermes = h;
+////  mpiComm = mpi;
+//  Init_();
+//  engine_logger->info("rank {} with name {} and mode {}", rank, name, adios2::ToString(mode));
+//}
 
 /**
 * Initialize the engine.
@@ -128,25 +128,25 @@ void HermesEngine::Init_() {
     }
   }
   //Hermes setup
-  if (!Hermes->connect()) {
-    engine_logger->warn("Could not connect to Hermes", rank);
-    throw coeus::common::ErrorException(HERMES_CONNECT_FAILED);
-  }
-  if (rank == 0) std::cout << "Connected to Hermes" << std::endl;
-
-  if (params.find("db_file") != params.end()) {
-    db_file = params["db_file"];
-    db = new SQLiteWrapper(db_file);
-    if(rank % ppn == 0) {
-      db->createTables();
-      std::cout << "DB_FILE: " << db_file << std::endl;
-    }
-    TRANSPARENT_HERMES();
-    client.CreateRoot(DomainId::GetGlobal(), "db_operation", db_file);
-    if (rank == 0) std::cout << "Done with root" << std::endl;
-  } else {
-    throw std::invalid_argument("db_file not found in parameters");
-  }
+//  if (!Hermes->connect()) {
+//    engine_logger->warn("Could not connect to Hermes", rank);
+//    throw coeus::common::ErrorException(HERMES_CONNECT_FAILED);
+//  }
+//  if (rank == 0) std::cout << "Connected to Hermes" << std::endl;
+//
+//  if (params.find("db_file") != params.end()) {
+//    db_file = params["db_file"];
+//    db = new SQLiteWrapper(db_file);
+//    if(rank % ppn == 0) {
+//      db->createTables();
+//      std::cout << "DB_FILE: " << db_file << std::endl;
+//    }
+//    TRANSPARENT_HERMES();
+//    client.CreateRoot(DomainId::GetGlobal(), "db_operation", db_file);
+//    if (rank == 0) std::cout << "Done with root" << std::endl;
+//  } else {
+//    throw std::invalid_argument("db_file not found in parameters");
+//  }
   open = true;
 }
 
@@ -183,7 +183,7 @@ adios2::StepStatus HermesEngine::BeginStep(adios2::StepMode mode,
   std::string bucket_name = "step_" + std::to_string(currentStep)
       + "_rank" + std::to_string(rank);
 
-  Hermes->GetBucket(bucket_name);
+//  Hermes->GetBucket(bucket_name);
   return adios2::StepStatus::OK;
 }
 
@@ -199,10 +199,10 @@ void HermesEngine::EndStep() {
   if (m_OpenMode == adios2::Mode::Write) {
     if(rank % ppn == 0) {
       DbOperation db_op(uid, currentStep);
-      client.Mdm_insertRoot(DomainId::GetGlobal(), db_op);
+//      client.Mdm_insertRoot(DomainId::GetGlobal(), db_op);
     }
   }
-  delete Hermes->bkt;
+//  delete Hermes->bkt;
 }
 
 /**
@@ -215,7 +215,7 @@ bool HermesEngine::VariableMinMax(const adios2::core::VariableBase &Var,
   MinMax.Init(Var.m_Type);
 
   // Obtain the blob from Hermes using the filename and variable name
-  hermes::Blob blob = Hermes->bkt->Get(Var.m_Name);
+//  hermes::Blob blob = Hermes->bkt->Get(Var.m_Name);
 
 #define DEFINE_VARIABLE(T) \
       if (adios2::helper::GetDataType<T>()  ==  Var.m_Type) { \

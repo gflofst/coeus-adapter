@@ -85,12 +85,13 @@ endif()
 # External libraries
 #------------------------------------------------------------------------------
 # Hermes
-find_package(Hermes CONFIG REQUIRED)
-message(STATUS "found Hermes at ${Hermes_DIR}")
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_definitions(HERMES_LOG_VERBOSITY=1)
-endif()
-include_directories(${HermesShm_INCLUDE_DIRS})
+#find_package(Hermes CONFIG REQUIRED)
+#message(STATUS "found Hermes at ${Hermes_DIR}")
+#if(CMAKE_BUILD_TYPE STREQUAL "Release")
+#    add_compile_definitions(HERMES_LOG_VERBOSITY=1)
+#endif()
+#include_directories(${HermesShm_INCLUDE_DIRS})
+
 # COEUS
 find_package(ADIOS2 REQUIRED)
 message(STATUS "Found Adios2")
